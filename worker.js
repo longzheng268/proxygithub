@@ -1808,12 +1808,13 @@ async function handleGitHubProxy(request, pathname) {
 			// 替换相对路径的链接 - 修复分支列表、分页等功能
 			// 更精确的正则表达式，避免错误替换
 			html = html.replace(/(href|src|action|data-url|data-turbo-frame-src)="\/([^"]*?)"/g, (match, attr, path) => {
-				// 跳过已经是代理路径、data URI、锚点、或JavaScript的路径
+				// 跳过已经是代理路径、data URI、锚点、或JavaScript/VBScript的路径
 				if (path.startsWith('https://') || 
 				    path.startsWith('http://') || 
 				    path.startsWith('data:') || 
 				    path.startsWith('#') || 
-				    path.startsWith('javascript:')) {
+				    path.startsWith('javascript:') ||
+				    path.startsWith('vbscript:')) {
 					return match;
 				}
 				// 添加代理前缀

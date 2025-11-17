@@ -1,0 +1,35 @@
+{
+  "name": "proxygithub",
+  "version": "1.0.0",
+  "description": "GitHub & Docker Hub 加速代理 - Cloudflare Workers",
+  "main": "worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/longzheng268/proxygithub.git"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "github",
+    "proxy",
+    "docker",
+    "mirror",
+    "acceleration",
+    "cdn"
+  ],
+  "author": "longzheng268",
+  "license": "SEE LICENSE IN LICENSE",
+  "bugs": {
+    "url": "https://github.com/longzheng268/proxygithub/issues"
+  },
+  "homepage": "https://github.com/longzheng268/proxygithub#readme",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

@@ -821,6 +821,100 @@ async function renderHomePage() {
 			height: 18px;
 			filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.8));
 		}
+
+		.command-options {
+			display: flex;
+			gap: 10px;
+			margin-bottom: 20px;
+			flex-wrap: wrap;
+		}
+
+		.command-option {
+			padding: 10px 20px;
+			background: rgba(0, 255, 255, 0.1);
+			color: #00ffff;
+			border: 2px solid rgba(0, 255, 255, 0.3);
+			font-size: 14px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			text-transform: uppercase;
+			letter-spacing: 1px;
+			clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+			box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+		}
+
+		.command-option:hover {
+			background: rgba(0, 255, 255, 0.3);
+			color: #ffffff;
+			transform: translateY(-2px) scale(1.05);
+			box-shadow: 
+				0 0 25px rgba(0, 255, 255, 0.5),
+				0 0 50px rgba(255, 0, 255, 0.3);
+			border-color: rgba(0, 255, 255, 1);
+			text-shadow: 0 0 10px rgba(0, 255, 255, 1);
+		}
+
+		.command-option.active {
+			background: rgba(0, 255, 255, 0.3);
+			color: #ffffff;
+			border-color: rgba(0, 255, 255, 0.8);
+			text-shadow: 0 0 10px rgba(0, 255, 255, 1);
+			box-shadow: 
+				0 0 20px rgba(0, 255, 255, 0.5),
+				inset 0 0 20px rgba(0, 255, 255, 0.2);
+		}
+
+		.command-output {
+			background: rgba(0, 0, 0, 0.8);
+			color: #00ff00;
+			padding: 15px;
+			border: 1px solid rgba(0, 255, 0, 0.3);
+			border-left: 3px solid rgba(0, 255, 255, 0.8);
+			margin: 20px 0;
+			font-family: 'Courier New', 'Consolas', monospace;
+			font-size: 14px;
+			line-height: 1.6;
+			position: relative;
+			box-shadow: 
+				0 0 20px rgba(0, 255, 0, 0.2),
+				inset 0 0 20px rgba(0, 255, 255, 0.05);
+			display: none;
+			word-wrap: break-word;
+			white-space: pre-wrap;
+		}
+
+		.command-output.show {
+			display: block;
+			animation: fadeIn 0.3s ease;
+		}
+
+		.command-output code {
+			color: #00ff00;
+			text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+		}
+
+		.copy-button {
+			background: rgba(255, 0, 255, 0.2);
+			border: 1px solid rgba(255, 0, 255, 0.5);
+			color: #ff00ff;
+			padding: 5px 15px;
+			margin-top: 10px;
+			cursor: pointer;
+			font-size: 12px;
+			text-transform: uppercase;
+			letter-spacing: 1px;
+			transition: all 0.3s ease;
+			clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+		}
+
+		.copy-button:hover {
+			background: rgba(255, 0, 255, 0.4);
+			color: #ffffff;
+			text-shadow: 0 0 10px rgba(255, 0, 255, 1);
+			border-color: rgba(255, 0, 255, 1);
+			box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+		}
 		}
 
 		@media (max-width: 768px) {
@@ -878,35 +972,47 @@ async function renderHomePage() {
 
 			<div class="search-container">
 				<input type="text" class="search-input" id="github-url" placeholder="输入 GitHub 仓库地址，例如：https://github.com/owner/repo">
-				<button class="search-button" onclick="proxyGithub()"><span>🔗 生成代理链接</span></button>
+			</div>
+
+			<div class="command-options">
+				<button class="command-option active" onclick="selectCommandType('url')">📋 代理链接</button>
+				<button class="command-option" onclick="selectCommandType('clone')">📦 Git Clone</button>
+				<button class="command-option" onclick="selectCommandType('wget')">⬇️ Wget</button>
+				<button class="command-option" onclick="selectCommandType('curl')">🔄 Curl</button>
+			</div>
+
+			<div class="search-container">
+				<button class="search-button" onclick="generateCommand()" style="width: 100%;"><span>✨ 生成命令</span></button>
+			</div>
+
+			<div id="command-output" class="command-output">
+				<code id="command-text"></code>
+				<div>
+					<button class="copy-button" onclick="copyCommand()">📋 复制到剪贴板</button>
+				</div>
 			</div>
 
 			<div class="usage-section">
 				<h3>GitHub 使用说明</h3>
 				
 				<div class="example">
+					<div class="example-label">Git Clone 仓库</div>
+					<div class="code-block"><code>git clone https://你的域名/https://github.com/OWNER/REPO.git</code></div>
+				</div>
+
+				<div class="example">
 					<div class="example-label">浏览仓库</div>
 					<div class="code-block"><code>https://你的域名/https://github.com/OWNER/REPO</code></div>
 				</div>
 
 				<div class="example">
-					<div class="example-label">浏览目录</div>
-					<div class="code-block"><code>https://你的域名/https://github.com/OWNER/REPO/tree/BRANCH/path</code></div>
+					<div class="example-label">下载文件 (Wget)</div>
+					<div class="code-block"><code>wget https://你的域名/https://github.com/OWNER/REPO/archive/refs/heads/main.zip</code></div>
 				</div>
 
 				<div class="example">
-					<div class="example-label">查看文件</div>
-					<div class="code-block"><code>https://你的域名/https://github.com/OWNER/REPO/blob/BRANCH/path/to/file</code></div>
-				</div>
-
-				<div class="example">
-					<div class="example-label">获取 Raw 文件</div>
-					<div class="code-block"><code>https://你的域名/https://raw.githubusercontent.com/OWNER/REPO/BRANCH/path/to/file</code></div>
-				</div>
-
-				<div class="example">
-					<div class="example-label">访问 API</div>
-					<div class="code-block"><code>https://你的域名/https://api.github.com/repos/OWNER/REPO</code></div>
+					<div class="example-label">获取 Raw 文件 (Curl)</div>
+					<div class="code-block"><code>curl -L https://你的域名/https://raw.githubusercontent.com/OWNER/REPO/BRANCH/path/to/file</code></div>
 				</div>
 			</div>
 
@@ -992,6 +1098,8 @@ docker pull k8s.你的域名/IMAGE</code></div>
 	</div>
 
 	<script>
+		let currentCommandType = 'url';
+
 		function switchTab(tab) {
 			// 更新标签页样式
 			document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1008,7 +1116,16 @@ docker pull k8s.你的域名/IMAGE</code></div>
 			window.location.href = proxyUrl;
 		}
 
-		function proxyGithub() {
+		function selectCommandType(type) {
+			currentCommandType = type;
+			// 更新按钮样式
+			document.querySelectorAll('.command-option').forEach(btn => btn.classList.remove('active'));
+			event.target.classList.add('active');
+			// 隐藏输出
+			document.getElementById('command-output').classList.remove('show');
+		}
+
+		function generateCommand() {
 			const input = document.getElementById('github-url').value.trim();
 			if (!input) {
 				alert('请输入 GitHub 地址');
@@ -1016,20 +1133,77 @@ docker pull k8s.你的域名/IMAGE</code></div>
 			}
 
 			const currentDomain = window.location.origin;
-			let proxyUrl = '';
+			let githubUrl = '';
 
+			// 处理输入 - 提取 GitHub URL
 			if (input.startsWith('http://') || input.startsWith('https://')) {
-				proxyUrl = currentDomain + '/' + input;
+				githubUrl = input;
 			} else {
-				proxyUrl = currentDomain + '/https://github.com/' + input;
+				githubUrl = 'https://github.com/' + input;
 			}
 
-			// 复制到剪贴板
-			navigator.clipboard.writeText(proxyUrl).then(() => {
-				alert('代理链接已复制到剪贴板：\\n' + proxyUrl);
+			// 生成代理 URL
+			const proxyUrl = currentDomain + '/' + githubUrl;
+			
+			let command = '';
+			let commandText = '';
+
+			switch(currentCommandType) {
+				case 'url':
+					command = proxyUrl;
+					commandText = '代理链接：\\n' + command;
+					break;
+				case 'clone':
+					command = 'git clone ' + proxyUrl + '.git';
+					commandText = 'Git Clone 命令：\\n' + command;
+					break;
+				case 'wget':
+					// 对于 wget，如果是仓库地址，下载 archive
+					let wgetUrl = proxyUrl;
+					if (githubUrl.match(/^https:\\/\\/github\\.com\\/[^\\/]+\\/[^\\/]+\\/?$/)) {
+						wgetUrl = proxyUrl + '/archive/refs/heads/main.zip';
+					}
+					command = 'wget ' + wgetUrl;
+					commandText = 'Wget 命令：\\n' + command;
+					break;
+				case 'curl':
+					command = 'curl -L ' + proxyUrl;
+					commandText = 'Curl 命令：\\n' + command;
+					break;
+			}
+
+			// 显示命令
+			document.getElementById('command-text').textContent = commandText;
+			document.getElementById('command-output').classList.add('show');
+
+			// 自动复制到剪贴板
+			copyToClipboard(command);
+		}
+
+		function copyCommand() {
+			const commandElement = document.getElementById('command-text');
+			const lines = commandElement.textContent.split('\\n');
+			const command = lines.length > 1 ? lines.slice(1).join('\\n') : commandElement.textContent;
+			copyToClipboard(command);
+		}
+
+		function copyToClipboard(text) {
+			navigator.clipboard.writeText(text).then(() => {
+				// 显示成功提示
+				const btn = event.target;
+				const originalText = btn.textContent;
+				btn.textContent = '✓ 已复制';
+				setTimeout(() => {
+					btn.textContent = originalText;
+				}, 2000);
 			}).catch(() => {
-				alert('代理链接：\\n' + proxyUrl);
+				alert('复制失败，请手动复制');
 			});
+		}
+
+		function proxyGithub() {
+			// 保持向后兼容
+			generateCommand();
 		}
 
 		function searchDocker() {
@@ -1536,10 +1710,11 @@ async function handleGitHubProxy(request, pathname) {
 		// 创建新的响应头
 		const responseHeaders = new Headers(response.headers);
 		
-		// 添加 CORS 头部（仅在需要时）
-		if (!responseHeaders.has('Access-Control-Allow-Origin')) {
-			responseHeaders.set('Access-Control-Allow-Origin', '*');
-		}
+		// 添加 CORS 头部以支持浏览器中的 API 调用
+		responseHeaders.set('Access-Control-Allow-Origin', '*');
+		responseHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+		responseHeaders.set('Access-Control-Allow-Headers', '*');
+		responseHeaders.set('Access-Control-Expose-Headers', '*');
 		
 		// 对于 git 操作，保持原始响应不变
 		// 只有对于浏览器请求（HTML）才进行链接替换
@@ -1566,11 +1741,38 @@ async function handleGitHubProxy(request, pathname) {
 		// HTML 响应：替换链接以提供更好的浏览器体验
 		if (contentType.includes('text/html')) {
 			let html = await response.text();
+			const proxyOrigin = new URL(request.url).origin;
+			
 			// 替换 GitHub 域名链接为代理链接
 			html = html.replace(/https?:\/\/(github\.com|raw\.githubusercontent\.com|api\.github\.com|gist\.github\.com|codeload\.github\.com)/g, 
-				(match) => `${new URL(request.url).origin}/${match}`);
+				(match) => `${proxyOrigin}/${match}`);
+			
+			// 替换相对路径的 API 调用 - 修复分支列表等功能
+			html = html.replace(/"\/([^"]*?)"/g, (match, path) => {
+				// 如果是以 / 开头的路径，且不是已经代理的路径
+				if (path && !path.startsWith('http') && !path.startsWith(proxyOrigin)) {
+					return `"${proxyOrigin}/https://${url.host}/${path}"`;
+				}
+				return match;
+			});
 			
 			return new Response(html, {
+				status: response.status,
+				statusText: response.statusText,
+				headers: responseHeaders,
+			});
+		}
+		
+		// JSON/API 响应：替换其中的 URL
+		if (contentType.includes('application/json')) {
+			let json = await response.text();
+			const proxyOrigin = new URL(request.url).origin;
+			
+			// 替换 JSON 中的 GitHub URL
+			json = json.replace(/https?:\/\/(github\.com|raw\.githubusercontent\.com|api\.github\.com|gist\.github\.com|codeload\.github\.com)/g, 
+				(match) => `${proxyOrigin}/${match}`);
+			
+			return new Response(json, {
 				status: response.status,
 				statusText: response.statusText,
 				headers: responseHeaders,

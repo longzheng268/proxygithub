@@ -1747,13 +1747,29 @@ async function handleGitHubProxy(request, pathname) {
 			html = html.replace(/https?:\/\/(github\.com|raw\.githubusercontent\.com|api\.github\.com|gist\.github\.com|codeload\.github\.com)/g, 
 				(match) => `${proxyOrigin}/${match}`);
 			
-			// 替换相对路径的 API 调用 - 修复分支列表等功能
-			html = html.replace(/"\/([^"]*?)"/g, (match, path) => {
-				// 如果是以 / 开头的路径，且不是已经代理的路径
-				if (path && !path.startsWith('http') && !path.startsWith(proxyOrigin)) {
-					return `"${proxyOrigin}/https://${url.host}/${path}"`;
+			// 替换相对路径的链接 - 修复分支列表、分页等功能
+			// 更精确的正则表达式，避免错误替换
+			html = html.replace(/(href|src|action|data-url|data-turbo-frame-src)="\/([^"]*?)"/g, (match, attr, path) => {
+				// 跳过已经是代理路径、data URI、锚点、或JavaScript的路径
+				if (path.startsWith('https://') || 
+				    path.startsWith('http://') || 
+				    path.startsWith('data:') || 
+				    path.startsWith('#') || 
+				    path.startsWith('javascript:')) {
+					return match;
 				}
-				return match;
+				// 添加代理前缀
+				return `${attr}="${proxyOrigin}/https://${url.host}/${path}"`;
+			});
+			
+			// 替换JSON中的相对路径 - 用于API端点
+			html = html.replace(/("url"|"api"|"href"):\s*"\/([^"]*?)"/g, (match, key, path) => {
+				// 跳过已经是完整URL的路径
+				if (path.startsWith('https://') || path.startsWith('http://')) {
+					return match;
+				}
+				// 添加代理前缀
+				return `${key}:"${proxyOrigin}/https://${url.host}/${path}"`;
 			});
 			
 			return new Response(html, {

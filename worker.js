@@ -155,6 +155,60 @@ async function renderHomePage() {
 			align-items: center;
 			justify-content: center;
 			padding: 20px;
+			position: relative;
+			overflow-x: hidden;
+		}
+
+		/* 鼠标追踪光效 */
+		#cursor-glow {
+			position: fixed;
+			width: 400px;
+			height: 400px;
+			border-radius: 50%;
+			background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+			pointer-events: none;
+			transform: translate(-50%, -50%);
+			z-index: 1;
+			transition: opacity 0.3s ease;
+			opacity: 0;
+		}
+
+		body:hover #cursor-glow {
+			opacity: 1;
+		}
+
+		/* 点击波纹效果 */
+		.ripple {
+			position: absolute;
+			border-radius: 50%;
+			background: rgba(255, 255, 255, 0.6);
+			transform: scale(0);
+			animation: ripple-animation 0.6s ease-out;
+			pointer-events: none;
+		}
+
+		@keyframes ripple-animation {
+			to {
+				transform: scale(4);
+				opacity: 0;
+			}
+		}
+
+		/* 悬浮粒子效果 */
+		.particle {
+			position: fixed;
+			width: 4px;
+			height: 4px;
+			background: rgba(255, 255, 255, 0.5);
+			border-radius: 50%;
+			pointer-events: none;
+			z-index: 0;
+			animation: float 3s ease-in-out infinite;
+		}
+
+		@keyframes float {
+			0%, 100% { transform: translateY(0) translateX(0); }
+			50% { transform: translateY(-20px) translateX(10px); }
 		}
 
 		.container {
@@ -165,6 +219,20 @@ async function renderHomePage() {
 			width: 100%;
 			padding: 40px;
 			backdrop-filter: blur(10px);
+			position: relative;
+			z-index: 2;
+			animation: container-fade-in 0.6s ease-out;
+		}
+
+		@keyframes container-fade-in {
+			from {
+				opacity: 0;
+				transform: translateY(20px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
 		}
 
 		h1 {
@@ -176,6 +244,21 @@ async function renderHomePage() {
 			-webkit-background-clip: text;
 			-webkit-text-fill-color: transparent;
 			background-clip: text;
+			animation: title-bounce 0.8s ease-out;
+		}
+
+		@keyframes title-bounce {
+			0% {
+				transform: scale(0.8);
+				opacity: 0;
+			}
+			50% {
+				transform: scale(1.05);
+			}
+			100% {
+				transform: scale(1);
+				opacity: 1;
+			}
 		}
 
 		.subtitle {
@@ -304,11 +387,33 @@ async function renderHomePage() {
 			border-radius: 10px;
 			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 			transition: transform 0.3s ease, box-shadow 0.3s ease;
+			cursor: pointer;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.feature-card::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: -100%;
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+			transition: left 0.5s ease;
+		}
+
+		.feature-card:hover::before {
+			left: 100%;
 		}
 
 		.feature-card:hover {
-			transform: translateY(-5px);
+			transform: translateY(-5px) scale(1.02);
 			box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+		}
+
+		.feature-card:active {
+			transform: translateY(-3px) scale(0.98);
 		}
 
 		.feature-card h4 {
@@ -353,6 +458,26 @@ async function renderHomePage() {
 			font-weight: 600;
 			cursor: pointer;
 			transition: transform 0.2s ease, box-shadow 0.2s ease;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.search-button::before {
+			content: '';
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			width: 0;
+			height: 0;
+			border-radius: 50%;
+			background: rgba(255, 255, 255, 0.3);
+			transform: translate(-50%, -50%);
+			transition: width 0.6s ease, height 0.6s ease;
+		}
+
+		.search-button:hover::before {
+			width: 300px;
+			height: 300px;
 		}
 
 		.search-button:hover {
@@ -361,7 +486,12 @@ async function renderHomePage() {
 		}
 
 		.search-button:active {
-			transform: translateY(0);
+			transform: translateY(0) scale(0.95);
+		}
+
+		.search-button span {
+			position: relative;
+			z-index: 1;
 		}
 
 		.footer {
@@ -380,6 +510,45 @@ async function renderHomePage() {
 
 		.footer a:hover {
 			text-decoration: underline;
+		}
+
+		.quick-nav {
+			display: flex;
+			gap: 10px;
+			margin-bottom: 20px;
+			flex-wrap: wrap;
+		}
+
+		.quick-nav-button {
+			padding: 10px 20px;
+			background: white;
+			color: #667eea;
+			border: 2px solid #667eea;
+			border-radius: 8px;
+			font-size: 14px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			text-decoration: none;
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.quick-nav-button:hover {
+			background: #667eea;
+			color: white;
+			transform: translateY(-2px) scale(1.05);
+			box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+		}
+
+		.quick-nav-button:active {
+			transform: translateY(0) scale(0.98);
+		}
+
+		.quick-nav-button svg {
+			width: 18px;
+			height: 18px;
 		}
 
 		@media (max-width: 768px) {
@@ -407,6 +576,9 @@ async function renderHomePage() {
 	</style>
 </head>
 <body>
+	<!-- 鼠标追踪光效 -->
+	<div id="cursor-glow"></div>
+	
 	<div class="container">
 		<h1>🚀 GitHub & Docker Hub 加速代理</h1>
 		<p class="subtitle">快速、稳定、免费的代理服务</p>
@@ -417,9 +589,24 @@ async function renderHomePage() {
 		</div>
 
 		<div id="github-content" class="tab-content active">
+			<div class="quick-nav">
+				<a href="javascript:void(0)" class="quick-nav-button" onclick="openGitHubProxy('https://github.com')">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+						<path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+					</svg>
+					GitHub 首页
+				</a>
+				<a href="javascript:void(0)" class="quick-nav-button" onclick="openGitHubProxy('https://github.com/trending')">
+					🔥 热门项目
+				</a>
+				<a href="javascript:void(0)" class="quick-nav-button" onclick="openGitHubProxy('https://github.com/explore')">
+					🧭 探索
+				</a>
+			</div>
+
 			<div class="search-container">
 				<input type="text" class="search-input" id="github-url" placeholder="输入 GitHub 仓库地址，例如：https://github.com/owner/repo">
-				<button class="search-button" onclick="proxyGithub()">🔗 生成代理链接</button>
+				<button class="search-button" onclick="proxyGithub()"><span>🔗 生成代理链接</span></button>
 			</div>
 
 			<div class="usage-section">
@@ -470,7 +657,7 @@ async function renderHomePage() {
 		<div id="docker-content" class="tab-content">
 			<div class="search-container">
 				<input type="text" class="search-input" id="docker-query" placeholder="搜索 Docker 镜像...">
-				<button class="search-button" onclick="searchDocker()">🔍 搜索镜像</button>
+				<button class="search-button" onclick="searchDocker()"><span>🔍 搜索镜像</span></button>
 			</div>
 
 			<div class="usage-section">
@@ -543,6 +730,12 @@ docker pull k8s.你的域名/IMAGE</code></div>
 			document.getElementById(tab + '-content').classList.add('active');
 		}
 
+		function openGitHubProxy(githubUrl) {
+			const currentDomain = window.location.origin;
+			const proxyUrl = currentDomain + '/' + githubUrl;
+			window.location.href = proxyUrl;
+		}
+
 		function proxyGithub() {
 			const input = document.getElementById('github-url').value.trim();
 			if (!input) {
@@ -583,6 +776,80 @@ docker pull k8s.你的域名/IMAGE</code></div>
 
 		document.getElementById('docker-query')?.addEventListener('keypress', function(e) {
 			if (e.key === 'Enter') searchDocker();
+		});
+
+		// ==========================================
+		// 鼠标追踪光效
+		// ==========================================
+		const cursorGlow = document.getElementById('cursor-glow');
+		let mouseX = 0, mouseY = 0;
+		let glowX = 0, glowY = 0;
+
+		document.addEventListener('mousemove', function(e) {
+			mouseX = e.clientX;
+			mouseY = e.clientY;
+		});
+
+		// 平滑追踪动画
+		function animateGlow() {
+			glowX += (mouseX - glowX) * 0.1;
+			glowY += (mouseY - glowY) * 0.1;
+			
+			if (cursorGlow) {
+				cursorGlow.style.left = glowX + 'px';
+				cursorGlow.style.top = glowY + 'px';
+			}
+			
+			requestAnimationFrame(animateGlow);
+		}
+		animateGlow();
+
+		// ==========================================
+		// 点击波纹效果
+		// ==========================================
+		document.addEventListener('click', function(e) {
+			const ripple = document.createElement('div');
+			ripple.className = 'ripple';
+			ripple.style.left = e.clientX + 'px';
+			ripple.style.top = e.clientY + 'px';
+			ripple.style.width = '20px';
+			ripple.style.height = '20px';
+			
+			document.body.appendChild(ripple);
+			
+			setTimeout(() => {
+				ripple.remove();
+			}, 600);
+		});
+
+		// ==========================================
+		// 生成背景粒子
+		// ==========================================
+		function createParticles() {
+			const particleCount = 15;
+			for (let i = 0; i < particleCount; i++) {
+				const particle = document.createElement('div');
+				particle.className = 'particle';
+				particle.style.left = Math.random() * 100 + '%';
+				particle.style.top = Math.random() * 100 + '%';
+				particle.style.animationDelay = Math.random() * 3 + 's';
+				particle.style.animationDuration = (3 + Math.random() * 2) + 's';
+				document.body.appendChild(particle);
+			}
+		}
+		createParticles();
+
+		// ==========================================
+		// 卡片悬浮动画增强
+		// ==========================================
+		document.querySelectorAll('.feature-card').forEach(card => {
+			card.addEventListener('mouseenter', function() {
+				this.style.transform = 'translateY(-5px) scale(1.02) rotateZ(' + (Math.random() * 2 - 1) + 'deg)';
+			});
+			
+			card.addEventListener('mouseleave', function() {
+				this.style.transform = '';
+			});
 		});
 	</script>
 </body>

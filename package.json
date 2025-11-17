@@ -30,6 +30,6 @@
   },
   "homepage": "https://github.com/longzheng268/proxygithub#readme",
   "devDependencies": {
-    "wrangler": "^3.0.0"
+    "wrangler": "^3.114.15"
   }
 }

@@ -25,6 +25,22 @@
 - ⚡ **零配置使用** - 部署后即可直接使用，无需复杂配置
 - 🐳 **Docker 加速** - 支持 Docker Hub、GCR、GHCR 等多个镜像仓库
 - 📦 **Git 完美兼容** - 支持 git clone、pull、push 等所有 Git 操作
+- 🎨 **精美UI界面** - 现代化设计，响应式布局，支持移动端
+- ✨ **动效交互** - 鼠标追踪光效、点击波纹、悬浮动画等流畅特效
+- 🔘 **一键导航** - 内置 GitHub 首页、热门项目等快捷按钮，无需手动修改地址
+
+### 🎨 界面特性
+
+- **响应式设计** - 完美适配桌面、平板、手机
+- **双模式切换** - GitHub 和 Docker 代理快速切换
+- **实时生成** - 即时生成代理链接，支持复制到剪贴板
+- **交互动效**：
+  - 🌟 鼠标追踪光晕效果
+  - 💫 点击波纹扩散动画
+  - ✨ 悬浮卡片旋转特效
+  - 🎭 背景浮动粒子效果
+  - 🎯 按钮涟漪动画
+- **快捷导航** - 一键访问 GitHub 首页、热门项目、探索页面
 
 ### 📋 功能说明
 
@@ -40,6 +56,12 @@
 | Raw 文件 | `https://你的域名/https://raw.githubusercontent.com/OWNER/REPO/BRANCH/path/to/file` |
 | API 访问 | `https://你的域名/https://api.github.com/repos/OWNER/REPO` |
 | Git Clone | `git clone https://你的域名/https://github.com/OWNER/REPO.git` |
+
+**快捷导航功能**：
+- 🏠 一键访问 GitHub 首页
+- 🔥 快速查看热门项目
+- 🧭 探索开源世界
+- 无需手动修改 URL，体验如同直接浏览 GitHub
 
 #### Docker Hub 代理功能
 
@@ -408,6 +430,22 @@ git push origin feature/your-feature
 - ⚡ **Zero Configuration** - Ready to use after deployment
 - 🐳 **Docker Acceleration** - Supports Docker Hub, GCR, GHCR, and more
 - 📦 **Full Git Compatibility** - Supports all Git operations
+- 🎨 **Beautiful UI** - Modern design, responsive layout, mobile-friendly
+- ✨ **Interactive Effects** - Mouse tracking glow, click ripples, hover animations
+- 🔘 **One-Click Navigation** - Quick access to GitHub homepage, trending, and more
+
+### 🎨 UI Features
+
+- **Responsive Design** - Perfect for desktop, tablet, and mobile
+- **Dual Mode** - Quick switch between GitHub and Docker proxy
+- **Real-time Generation** - Instant proxy link generation with clipboard support
+- **Interactive Effects**:
+  - 🌟 Mouse tracking glow effect
+  - 💫 Click ripple animation
+  - ✨ Card hover rotation
+  - 🎭 Floating particle background
+  - 🎯 Button ripple effects
+- **Quick Navigation** - One-click access to GitHub home, trending, and explore pages
 
 ### 📋 Features
 
@@ -421,6 +459,12 @@ git push origin feature/your-feature
 | Raw File | `https://your-domain/https://raw.githubusercontent.com/OWNER/REPO/BRANCH/path/to/file` |
 | API Access | `https://your-domain/https://api.github.com/repos/OWNER/REPO` |
 | Git Clone | `git clone https://your-domain/https://github.com/OWNER/REPO.git` |
+
+**Quick Navigation**:
+- 🏠 One-click GitHub homepage
+- 🔥 Quick access to trending repositories
+- 🧭 Explore the open-source world
+- No manual URL editing, experience just like browsing GitHub directly
 
 #### Docker Hub Proxy
 

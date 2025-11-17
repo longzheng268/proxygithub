@@ -8,7 +8,9 @@
 
 **一个基于 Cloudflare Workers 的高性能 GitHub 和 Docker Hub 代理服务**
 
-[简体中文](#简体中文) | [English](#english) | [部署指南](DEPLOY.md)
+**🆕 现已支持 Node.js 服务器和 Docker 部署！**
+
+[简体中文](#简体中文) | [English](#english) | [部署指南](DEPLOY.md) | [服务器部署](SERVER_DEPLOY.md)
 
 ![GitHub Proxy](https://github.com/user-attachments/assets/7d7c9f84-5685-4ab5-96ce-b951d3e2d18b)
 
@@ -90,7 +92,17 @@
 
 ### 🚀 快速开始
 
+#### 🎯 部署方式对比
+
+| 方式 | 适用场景 | 难度 | 成本 |
+|------|----------|------|------|
+| [Cloudflare Workers](#方法一一键部署推荐新手) | 个人使用，轻量级 | ⭐ 简单 | 免费 |
+| [Node.js 服务器](#node.js-服务器部署) | 需要完全控制 | ⭐⭐ 中等 | VPS 费用 |
+| [Docker 容器](#docker-部署) | 生产环境，易迁移 | ⭐⭐ 中等 | VPS 费用 |
+
 #### 方法一：一键部署（推荐新手）
+
+**Cloudflare Workers - 零配置，一键部署**
 
 1. **注册 Cloudflare 账号**
    - 访问 [Cloudflare](https://dash.cloudflare.com/sign-up)
@@ -114,7 +126,53 @@
    docker pull 你的域名.workers.dev/library/nginx:latest
    ```
 
-#### 方法二：使用 Wrangler CLI（推荐开发者）
+#### 方法二：Node.js 服务器部署
+
+**适合有 VPS 的用户，完全控制**
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/longzheng268/proxygithub.git
+cd proxygithub
+
+# 2. 安装依赖
+npm install
+
+# 3. 启动服务
+npm start
+
+# 或使用 PM2（推荐生产环境）
+npm install -g pm2
+pm2 start server.js --name proxygithub
+pm2 save
+pm2 startup
+```
+
+访问 `http://your-server-ip:8787`
+
+📚 **详细文档**: [服务器部署指南](SERVER_DEPLOY.md)
+
+#### 方法三：Docker 部署
+
+**适合容器化部署，易于迁移**
+
+```bash
+# 使用 Docker
+docker build -t proxygithub .
+docker run -d --name proxygithub -p 8787:8787 --restart unless-stopped proxygithub
+
+# 或使用 Docker Compose（推荐）
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+```
+
+访问 `http://your-server-ip:8787`
+
+📚 **详细文档**: [Docker 部署指南](SERVER_DEPLOY.md#docker-容器部署)
+
+#### 方法四：使用 Wrangler CLI（推荐开发者）
 
 **前置要求：**
 - Node.js 16.13.0 或更高版本

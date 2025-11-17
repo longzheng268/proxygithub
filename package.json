@@ -1,12 +1,21 @@
 {
   "name": "proxygithub",
-  "version": "1.0.0",
-  "description": "GitHub & Docker Hub 加速代理 - Cloudflare Workers",
+  "version": "2.0.0",
+  "description": "GitHub & Docker Hub 加速代理 - Cloudflare Workers / Node.js Server",
   "main": "worker.js",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --local --port 8787",
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",
+    "start": "node server.js",
+    "start:wrangler": "wrangler dev --local --port 8787 --no-update-check",
+    "docker:build": "docker build -t proxygithub:latest .",
+    "docker:run": "docker run -d --name proxygithub -p 8787:8787 --restart unless-stopped proxygithub:latest",
+    "docker:stop": "docker stop proxygithub",
+    "docker:logs": "docker logs -f proxygithub",
+    "compose:up": "docker-compose up -d",
+    "compose:down": "docker-compose down",
+    "compose:logs": "docker-compose logs -f",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "repository": {
@@ -21,7 +30,9 @@
     "docker",
     "mirror",
     "acceleration",
-    "cdn"
+    "cdn",
+    "nodejs",
+    "server"
   ],
   "author": "longzheng268",
   "license": "SEE LICENSE IN LICENSE",
@@ -31,5 +42,9 @@
   "homepage": "https://github.com/longzheng268/proxygithub#readme",
   "devDependencies": {
     "wrangler": "^3.114.15"
+  },
+  "engines": {
+    "node": ">=16.13.0",
+    "npm": ">=8.0.0"
   }
 }

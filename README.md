@@ -8,7 +8,9 @@
 
 **一个基于 Cloudflare Workers 的高性能 GitHub 和 Docker Hub 代理服务**
 
-[简体中文](#简体中文) | [English](#english)
+[简体中文](#简体中文) | [English](#english) | [部署指南](DEPLOY.md)
+
+![GitHub Proxy](https://github.com/user-attachments/assets/7d7c9f84-5685-4ab5-96ce-b951d3e2d18b)
 
 </div>
 
@@ -41,6 +43,17 @@
   - 🎭 背景浮动粒子效果
   - 🎯 按钮涟漪动画
 - **快捷导航** - 一键访问 GitHub 首页、热门项目、探索页面
+
+<details>
+<summary>📱 查看更多截图 / View More Screenshots</summary>
+
+**桌面视图 - Docker 代理**
+![Docker Proxy](https://github.com/user-attachments/assets/ec7e0889-07ad-400a-a88f-05e4925f2a01)
+
+**移动端视图 - 完美适配**
+![Mobile View](https://github.com/user-attachments/assets/a5639742-64e9-4746-bfd8-010735272d2f)
+
+</details>
 
 ### 📋 功能说明
 

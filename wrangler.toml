@@ -1,0 +1,28 @@
+# Cloudflare Workers Configuration
+# 用于部署 GitHub & Docker Hub 代理服务
+
+name = "proxygithub"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Workers 免费计划配置
+# Free plan allows 100,000 requests per day
+workers_dev = true
+
+# 环境变量配置（可选）
+# [vars]
+# URL302 = ""  # 302 重定向地址（可选）
+# URL = ""     # 自定义首页地址或 "nginx" 显示 nginx 伪装页（可选）
+# UA = ""      # 需要屏蔽的 User-Agent，逗号分隔（可选）
+
+# 路由配置示例（部署时取消注释并修改）
+# [[routes]]
+# pattern = "your-domain.com/*"
+# zone_name = "your-domain.com"
+
+# 自定义域名示例（部署时取消注释并修改）
+# [env.production]
+# name = "proxygithub-prod"
+# routes = [
+#   { pattern = "proxygithub.yourdomain.com/*", zone_name = "yourdomain.com" }
+# ]

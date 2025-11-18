@@ -1440,6 +1440,18 @@ async function handleRequest(request, env, ctx) {
 	workers_url = `https://${url.hostname}`;
 	const pathname = url.pathname;
 
+	// 处理 CORS 预检请求
+	if (request.method === 'OPTIONS') {
+		return new Response(null, {
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+				'Access-Control-Allow-Headers': '*',
+				'Access-Control-Max-Age': '86400',
+			}
+		});
+	}
+
 	// 特殊路由: Favicon 处理
 	if (pathname === '/favicon.ico') {
 		return handleFavicon();
@@ -1570,22 +1582,68 @@ async function handleDockerProxy(request, env, url, pathname, userAgent, getReqH
 			});
 		}
 		
-		const newUrl = new URL("https://registry.hub.docker.com" + pathname + url.search);
+		try {
+			const newUrl = new URL("https://registry.hub.docker.com" + pathname + url.search);
 
-		// 复制原始请求的标头
-		const headers = new Headers(request.headers);
+			// 复制原始请求的标头
+			const headers = new Headers(request.headers);
 
-		// 确保 Host 头部被替换为 hub.docker.com
-		headers.set('Host', 'registry.hub.docker.com');
+			// 确保 Host 头部被替换为 hub.docker.com
+			headers.set('Host', 'registry.hub.docker.com');
+			
+			// 添加 User-Agent 以避免被识别为爬虫
+			if (!headers.has('User-Agent')) {
+				headers.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+			}
 
-		const newRequest = new Request(newUrl, {
-				method: request.method,
-				headers: headers,
-				body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.blob() : null,
-				redirect: 'follow'
-		});
+			const newRequest = new Request(newUrl, {
+					method: request.method,
+					headers: headers,
+					body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.blob() : null,
+					redirect: 'follow'
+			});
 
-		return fetch(newRequest);
+			const response = await fetch(newRequest);
+			
+			// 如果收到 429 错误，返回友好的错误信息而不是直接转发
+			if (response.status === 429) {
+				const retryAfter = response.headers.get('Retry-After') || '60';
+				return new Response(
+					`Docker Hub API 速率限制。请稍后再试。\n\nRate limit exceeded. Please try again after ${retryAfter} seconds.\n\n建议：\n1. 减少请求频率\n2. 使用 Docker Hub 账号认证以获得更高配额\n3. 等待 ${retryAfter} 秒后重试`,
+					{
+						status: 429,
+						headers: {
+							'Content-Type': 'text/plain; charset=UTF-8',
+							'Retry-After': retryAfter,
+							'Cache-Control': 'no-cache',
+						}
+					}
+				);
+			}
+			
+			// 为搜索结果添加缓存以减少API请求
+			const responseHeaders = new Headers(response.headers);
+			if (pathname.includes('search') && response.status === 200) {
+				responseHeaders.set('Cache-Control', 'public, max-age=300'); // 缓存5分钟
+			}
+			
+			return new Response(response.body, {
+				status: response.status,
+				statusText: response.statusText,
+				headers: responseHeaders
+			});
+		} catch (error) {
+			console.error('Docker Hub proxy error:', error);
+			return new Response(
+				`Docker Hub 代理错误 / Docker Hub Proxy Error\n\n${error.message}\n\n请稍后重试 / Please try again later`,
+				{
+					status: 502,
+					headers: {
+						'Content-Type': 'text/plain; charset=UTF-8',
+					}
+				}
+			);
+		}
 	}
 
 	// 修改包含 %2F 和 %3A 的请求
@@ -1747,13 +1805,30 @@ async function handleGitHubProxy(request, pathname) {
 			html = html.replace(/https?:\/\/(github\.com|raw\.githubusercontent\.com|api\.github\.com|gist\.github\.com|codeload\.github\.com)/g, 
 				(match) => `${proxyOrigin}/${match}`);
 			
-			// 替换相对路径的 API 调用 - 修复分支列表等功能
-			html = html.replace(/"\/([^"]*?)"/g, (match, path) => {
-				// 如果是以 / 开头的路径，且不是已经代理的路径
-				if (path && !path.startsWith('http') && !path.startsWith(proxyOrigin)) {
-					return `"${proxyOrigin}/https://${url.host}/${path}"`;
+			// 替换相对路径的链接 - 修复分支列表、分页等功能
+			// 更精确的正则表达式，避免错误替换
+			html = html.replace(/(href|src|action|data-url|data-turbo-frame-src)="\/([^"]*?)"/g, (match, attr, path) => {
+				// 跳过已经是代理路径、data URI、锚点、或JavaScript/VBScript的路径
+				if (path.startsWith('https://') || 
+				    path.startsWith('http://') || 
+				    path.startsWith('data:') || 
+				    path.startsWith('#') || 
+				    path.startsWith('javascript:') ||
+				    path.startsWith('vbscript:')) {
+					return match;
 				}
-				return match;
+				// 添加代理前缀
+				return `${attr}="${proxyOrigin}/https://${url.host}/${path}"`;
+			});
+			
+			// 替换JSON中的相对路径 - 用于API端点
+			html = html.replace(/("url"|"api"|"href"):\s*"\/([^"]*?)"/g, (match, key, path) => {
+				// 跳过已经是完整URL的路径
+				if (path.startsWith('https://') || path.startsWith('http://')) {
+					return match;
+				}
+				// 添加代理前缀
+				return `${key}:"${proxyOrigin}/https://${url.host}/${path}"`;
 			});
 			
 			return new Response(html, {

@@ -15,6 +15,20 @@ const CONFIG = {
 	// 安全配置
 	security: {
 		blocked_user_agents: ['netcraft'],
+		// IP 地理位置限制配置
+		// 默认允许中国大陆访问，阻止其他国家/地区
+		geo_restriction: {
+			enabled: false, // 默认关闭，通过环境变量启用
+			mode: 'whitelist', // 'whitelist' 或 'blacklist'
+			allowed_countries: ['CN'], // ISO 3166-1 alpha-2 国家代码白名单
+			blocked_countries: [], // 黑名单模式使用
+		},
+		// 速率限制配置
+		rate_limit: {
+			enabled: false, // 默认关闭，通过环境变量启用
+			requests_per_minute: 60, // 每分钟请求数限制
+			window_ms: 60000, // 时间窗口（毫秒）
+		}
 	},
 	// 功能开关
 	features: {
@@ -28,6 +42,83 @@ const CONFIG = {
 let hub_host = CONFIG.docker.hub_host;
 let workers_url = CONFIG.docker.workers_url;
 let 屏蔽爬虫UA = [...CONFIG.security.blocked_user_agents];
+
+// ============================================
+// Rate Limiting Module
+// ============================================
+// 简单的内存存储用于速率限制（注意：在 Workers 中每个请求独立，需要使用 KV 或 Durable Objects 实现持久化）
+// 这里使用简单的Map作为演示，实际生产环境建议使用 Cloudflare KV
+const rateLimitStore = new Map();
+
+/**
+ * 清理过期的速率限制记录
+ */
+function cleanupRateLimit() {
+	const now = Date.now();
+	const windowMs = CONFIG.security.rate_limit.window_ms;
+	
+	for (const [key, data] of rateLimitStore.entries()) {
+		if (now - data.firstRequest > windowMs) {
+			rateLimitStore.delete(key);
+		}
+	}
+}
+
+/**
+ * 检查速率限制
+ * @param {string} clientIP 客户端 IP
+ * @returns {Object} { allowed: boolean, remaining: number, resetTime: number }
+ */
+function checkRateLimit(clientIP) {
+	if (!CONFIG.security.rate_limit.enabled) {
+		return { allowed: true, remaining: CONFIG.security.rate_limit.requests_per_minute, resetTime: 0 };
+	}
+	
+	// 定期清理过期记录
+	if (Math.random() < 0.01) { // 1% 的概率触发清理
+		cleanupRateLimit();
+	}
+	
+	const now = Date.now();
+	const windowMs = CONFIG.security.rate_limit.window_ms;
+	const maxRequests = CONFIG.security.rate_limit.requests_per_minute;
+	
+	if (!rateLimitStore.has(clientIP)) {
+		rateLimitStore.set(clientIP, {
+			count: 1,
+			firstRequest: now,
+			lastRequest: now
+		});
+		return { allowed: true, remaining: maxRequests - 1, resetTime: now + windowMs };
+	}
+	
+	const data = rateLimitStore.get(clientIP);
+	
+	// 检查时间窗口是否过期
+	if (now - data.firstRequest > windowMs) {
+		// 重置计数器
+		rateLimitStore.set(clientIP, {
+			count: 1,
+			firstRequest: now,
+			lastRequest: now
+		});
+		return { allowed: true, remaining: maxRequests - 1, resetTime: now + windowMs };
+	}
+	
+	// 在时间窗口内，增加计数
+	data.count++;
+	data.lastRequest = now;
+	rateLimitStore.set(clientIP, data);
+	
+	const remaining = Math.max(0, maxRequests - data.count);
+	const resetTime = data.firstRequest + windowMs;
+	
+	if (data.count > maxRequests) {
+		return { allowed: false, remaining: 0, resetTime };
+	}
+	
+	return { allowed: true, remaining, resetTime };
+}
 
 // ============================================
 // Docker Registry Routes Module
@@ -51,6 +142,228 @@ function routeByHosts(host) {
 
 	if (host in routes) return [ routes[host], false ];
 	else return [ hub_host, true ];
+}
+
+// ============================================
+// IP Geolocation Module
+// ============================================
+/**
+ * 检查请求的地理位置是否被允许
+ * @param {Request} request HTTP 请求对象
+ * @returns {Object} { allowed: boolean, country: string, reason: string }
+ */
+function checkGeoRestriction(request) {
+	if (!CONFIG.security.geo_restriction.enabled) {
+		return { allowed: true, country: 'UNKNOWN', reason: 'Geo-restriction disabled' };
+	}
+	
+	// 从 Cloudflare 请求头获取国家代码
+	// CF-IPCountry 头部由 Cloudflare 自动添加
+	const country = request.headers.get('CF-IPCountry') || 'UNKNOWN';
+	
+	const mode = CONFIG.security.geo_restriction.mode;
+	const allowedCountries = CONFIG.security.geo_restriction.allowed_countries;
+	const blockedCountries = CONFIG.security.geo_restriction.blocked_countries;
+	
+	if (mode === 'whitelist') {
+		// 白名单模式：只允许列表中的国家
+		if (allowedCountries.includes(country)) {
+			return { allowed: true, country, reason: 'Country in whitelist' };
+		}
+		return { allowed: false, country, reason: `Country ${country} not in whitelist` };
+	} else if (mode === 'blacklist') {
+		// 黑名单模式：阻止列表中的国家
+		if (blockedCountries.includes(country)) {
+			return { allowed: false, country, reason: `Country ${country} in blacklist` };
+		}
+		return { allowed: true, country, reason: 'Country not in blacklist' };
+	}
+	
+	// 默认允许
+	return { allowed: true, country, reason: 'Unknown mode, allowing by default' };
+}
+
+/**
+ * 返回 403 禁止访问响应
+ * @param {string} country 国家代码
+ * @param {string} reason 原因
+ */
+function createGeoBlockResponse(country, reason) {
+	const html = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>访问受限 - Access Restricted</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+		body {
+			font-family: 'Courier New', 'Consolas', monospace;
+			background: #0a0e27;
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 20px;
+		}
+		.container {
+			background: rgba(10, 14, 39, 0.85);
+			border: 2px solid rgba(255, 0, 0, 0.5);
+			box-shadow: 0 0 40px rgba(255, 0, 0, 0.3);
+			max-width: 600px;
+			width: 100%;
+			padding: 40px;
+			text-align: center;
+		}
+		h1 {
+			color: #ff0000;
+			margin-bottom: 20px;
+			font-size: 2em;
+			text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+		}
+		p {
+			color: #00ffff;
+			margin-bottom: 15px;
+			line-height: 1.6;
+		}
+		.code {
+			background: rgba(0, 0, 0, 0.5);
+			padding: 10px;
+			border-left: 3px solid rgba(255, 0, 0, 0.8);
+			color: #ff00ff;
+			font-family: 'Courier New', monospace;
+			margin: 20px 0;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>🚫 访问受限 / Access Restricted</h1>
+		<p>抱歉，由于地理位置限制，您的请求被拒绝。</p>
+		<p>Sorry, your request has been denied due to geographic restrictions.</p>
+		<div class="code">
+			国家代码 / Country Code: ${country}<br>
+			原因 / Reason: ${reason}
+		</div>
+		<p>如有疑问，请联系管理员。</p>
+		<p>If you have questions, please contact the administrator.</p>
+	</div>
+</body>
+</html>
+	`;
+	
+	return new Response(html, {
+		status: 403,
+		headers: {
+			'Content-Type': 'text/html; charset=UTF-8',
+			'X-Country-Code': country,
+			'X-Block-Reason': reason,
+		}
+	});
+}
+
+/**
+ * 返回 429 速率限制响应
+ * @param {number} resetTime 重置时间戳
+ * @param {number} remaining 剩余请求数
+ */
+function createRateLimitResponse(resetTime, remaining) {
+	const retryAfter = Math.ceil((resetTime - Date.now()) / 1000);
+	
+	const html = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>请求过多 - Too Many Requests</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+		body {
+			font-family: 'Courier New', 'Consolas', monospace;
+			background: #0a0e27;
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 20px;
+		}
+		.container {
+			background: rgba(10, 14, 39, 0.85);
+			border: 2px solid rgba(255, 165, 0, 0.5);
+			box-shadow: 0 0 40px rgba(255, 165, 0, 0.3);
+			max-width: 600px;
+			width: 100%;
+			padding: 40px;
+			text-align: center;
+		}
+		h1 {
+			color: #ff9900;
+			margin-bottom: 20px;
+			font-size: 2em;
+			text-shadow: 0 0 10px rgba(255, 165, 0, 0.8);
+		}
+		p {
+			color: #00ffff;
+			margin-bottom: 15px;
+			line-height: 1.6;
+		}
+		.code {
+			background: rgba(0, 0, 0, 0.5);
+			padding: 10px;
+			border-left: 3px solid rgba(255, 165, 0, 0.8);
+			color: #ff00ff;
+			font-family: 'Courier New', monospace;
+			margin: 20px 0;
+		}
+		.tip {
+			background: rgba(0, 255, 255, 0.1);
+			padding: 15px;
+			margin-top: 20px;
+			border: 1px solid rgba(0, 255, 255, 0.3);
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>⚠️ 请求过多 / Too Many Requests</h1>
+		<p>您的请求频率超过了限制。</p>
+		<p>Your request rate has exceeded the limit.</p>
+		<div class="code">
+			剩余请求数 / Remaining: ${remaining}<br>
+			重试时间 / Retry After: ${retryAfter} 秒 / seconds<br>
+			速率限制 / Rate Limit: ${CONFIG.security.rate_limit.requests_per_minute} 请求/分钟 requests/min
+		</div>
+		<div class="tip">
+			<p><strong>建议 / Suggestions:</strong></p>
+			<p>1. 请稍后再试 / Please try again later</p>
+			<p>2. 减少请求频率 / Reduce request frequency</p>
+			<p>3. 考虑实现客户端缓存 / Consider implementing client-side caching</p>
+		</div>
+	</div>
+</body>
+</html>
+	`;
+	
+	return new Response(html, {
+		status: 429,
+		headers: {
+			'Content-Type': 'text/html; charset=UTF-8',
+			'Retry-After': retryAfter.toString(),
+			'X-RateLimit-Limit': CONFIG.security.rate_limit.requests_per_minute.toString(),
+			'X-RateLimit-Remaining': remaining.toString(),
+			'X-RateLimit-Reset': resetTime.toString(),
+		}
+	});
 }
 
 // ============================================
@@ -1439,6 +1752,28 @@ async function handleRequest(request, env, ctx) {
 	if (env.UA) 屏蔽爬虫UA = 屏蔽爬虫UA.concat(await ADD(env.UA));
 	workers_url = `https://${url.hostname}`;
 	const pathname = url.pathname;
+	
+	// 从环境变量读取地理位置限制配置
+	if (env.GEO_RESTRICTION_ENABLED === 'true') {
+		CONFIG.security.geo_restriction.enabled = true;
+	}
+	if (env.GEO_RESTRICTION_MODE) {
+		CONFIG.security.geo_restriction.mode = env.GEO_RESTRICTION_MODE;
+	}
+	if (env.ALLOWED_COUNTRIES) {
+		CONFIG.security.geo_restriction.allowed_countries = await ADD(env.ALLOWED_COUNTRIES);
+	}
+	if (env.BLOCKED_COUNTRIES) {
+		CONFIG.security.geo_restriction.blocked_countries = await ADD(env.BLOCKED_COUNTRIES);
+	}
+	
+	// 从环境变量读取速率限制配置
+	if (env.RATE_LIMIT_ENABLED === 'true') {
+		CONFIG.security.rate_limit.enabled = true;
+	}
+	if (env.RATE_LIMIT_PER_MINUTE) {
+		CONFIG.security.rate_limit.requests_per_minute = parseInt(env.RATE_LIMIT_PER_MINUTE, 10);
+	}
 
 	// 处理 CORS 预检请求
 	if (request.method === 'OPTIONS') {
@@ -1450,6 +1785,21 @@ async function handleRequest(request, env, ctx) {
 				'Access-Control-Max-Age': '86400',
 			}
 		});
+	}
+	
+	// 安全检查1: IP 地理位置限制
+	const geoCheck = checkGeoRestriction(request);
+	if (!geoCheck.allowed) {
+		console.log(`Geo-blocked request from ${geoCheck.country}: ${geoCheck.reason}`);
+		return createGeoBlockResponse(geoCheck.country, geoCheck.reason);
+	}
+	
+	// 安全检查2: 速率限制
+	const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+	const rateLimitCheck = checkRateLimit(clientIP);
+	if (!rateLimitCheck.allowed) {
+		console.log(`Rate-limited request from ${clientIP}`);
+		return createRateLimitResponse(rateLimitCheck.resetTime, rateLimitCheck.remaining);
 	}
 
 	// 特殊路由: Favicon 处理

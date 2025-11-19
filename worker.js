@@ -195,7 +195,7 @@ function createGeoBlockResponse(country, reason) {
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>访问受限 - Access Restricted</title>
+	<title>Access Denied - 访问被拒绝</title>
 	<style>
 		* {
 			margin: 0;
@@ -203,8 +203,8 @@ function createGeoBlockResponse(country, reason) {
 			box-sizing: border-box;
 		}
 		body {
-			font-family: 'Courier New', 'Consolas', monospace;
-			background: #0a0e27;
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 			min-height: 100vh;
 			display: flex;
 			align-items: center;
@@ -212,46 +212,97 @@ function createGeoBlockResponse(country, reason) {
 			padding: 20px;
 		}
 		.container {
-			background: rgba(10, 14, 39, 0.85);
-			border: 2px solid rgba(255, 0, 0, 0.5);
-			box-shadow: 0 0 40px rgba(255, 0, 0, 0.3);
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 12px;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 			max-width: 600px;
 			width: 100%;
-			padding: 40px;
+			padding: 50px 40px;
 			text-align: center;
 		}
-		h1 {
-			color: #ff0000;
+		.emoji {
+			font-size: 80px;
 			margin-bottom: 20px;
-			font-size: 2em;
-			text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+			display: block;
+		}
+		h1 {
+			color: #333;
+			margin-bottom: 30px;
+			font-size: 1.8em;
+			font-weight: 600;
+			line-height: 1.4;
+		}
+		.title-en {
+			color: #555;
+			font-size: 0.9em;
 		}
 		p {
-			color: #00ffff;
+			color: #666;
 			margin-bottom: 15px;
-			line-height: 1.6;
+			line-height: 1.8;
+			font-size: 1em;
 		}
-		.code {
-			background: rgba(0, 0, 0, 0.5);
-			padding: 10px;
-			border-left: 3px solid rgba(255, 0, 0, 0.8);
-			color: #ff00ff;
-			font-family: 'Courier New', monospace;
-			margin: 20px 0;
+		.message-box {
+			background: #f8f9fa;
+			padding: 20px;
+			border-radius: 8px;
+			border-left: 4px solid #667eea;
+			margin: 30px 0;
+			text-align: left;
+		}
+		.message-box p {
+			margin-bottom: 8px;
+			color: #444;
+		}
+		.message-box p:last-child {
+			margin-bottom: 0;
+		}
+		.region-info {
+			background: #e8eaf6;
+			padding: 15px;
+			border-radius: 8px;
+			margin: 25px 0;
+			font-weight: 500;
+			color: #333;
+			font-size: 1.1em;
+		}
+		.contact {
+			margin-top: 30px;
+			padding-top: 20px;
+			border-top: 1px solid #e0e0e0;
+			color: #777;
+			font-size: 0.9em;
+		}
+		@media (max-width: 600px) {
+			.container {
+				padding: 40px 30px;
+			}
+			.emoji {
+				font-size: 60px;
+			}
+			h1 {
+				font-size: 1.5em;
+			}
 		}
 	</style>
 </head>
 <body>
 	<div class="container">
-		<h1>🚫 访问受限 / Access Restricted</h1>
-		<p>抱歉，由于地理位置限制，您的请求被拒绝。</p>
-		<p>Sorry, your request has been denied due to geographic restrictions.</p>
-		<div class="code">
-			国家代码 / Country Code: ${country}<br>
-			原因 / Reason: ${reason}
+		<span class="emoji">🚫</span>
+		<h1>
+			Access Denied - 访问被拒绝
+		</h1>
+		<div class="message-box">
+			<p>抱歉，此服务目前仅对特定地区开放。</p>
+			<p>Sorry, this service is currently only available in specific regions.</p>
 		</div>
-		<p>如有疑问，请联系管理员。</p>
-		<p>If you have questions, please contact the administrator.</p>
+		<div class="region-info">
+			检测到的地区 / Detected region: ${country}
+		</div>
+		<div class="contact">
+			<p>如有疑问，请联系管理员</p>
+			<p>If you have any questions, please contact the administrator</p>
+		</div>
 	</div>
 </body>
 </html>

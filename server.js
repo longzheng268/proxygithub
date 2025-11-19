@@ -56,9 +56,11 @@ async function startServer() {
         URL: process.env.URL || '',
         UA: process.env.UA || '',
         // 地理位置限制配置
-        GEO_RESTRICTION_ENABLED: process.env.GEO_RESTRICTION_ENABLED || 'false',
+        // 默认启用以匹配 worker.js 的行为和文档说明
+        // Node.js 部署时，由于缺少 CF-IPCountry 头部，country 会是 'UNKNOWN'，系统会自动允许访问
+        GEO_RESTRICTION_ENABLED: process.env.GEO_RESTRICTION_ENABLED || 'true',
         GEO_RESTRICTION_MODE: process.env.GEO_RESTRICTION_MODE || 'whitelist',
-        ALLOWED_COUNTRIES: process.env.ALLOWED_COUNTRIES || '',
+        ALLOWED_COUNTRIES: process.env.ALLOWED_COUNTRIES || 'CN,US,SG',
         BLOCKED_COUNTRIES: process.env.BLOCKED_COUNTRIES || '',
         // 速率限制配置
         RATE_LIMIT_ENABLED: process.env.RATE_LIMIT_ENABLED || 'false',

@@ -16,11 +16,11 @@ const CONFIG = {
 	security: {
 		blocked_user_agents: ['netcraft'],
 		// IP 地理位置限制配置
-		// 默认允许中国大陆访问，阻止其他国家/地区
+		// 默认允许中国大陆、美国和新加坡访问，阻止其他国家/地区
 		geo_restriction: {
-			enabled: false, // 默认关闭，通过环境变量启用
+			enabled: true, // 默认开启地理限制
 			mode: 'whitelist', // 'whitelist' 或 'blacklist'
-			allowed_countries: ['CN'], // ISO 3166-1 alpha-2 国家代码白名单
+			allowed_countries: ['CN', 'US', 'SG'], // ISO 3166-1 alpha-2 国家代码白名单
 			blocked_countries: [], // 黑名单模式使用
 		},
 		// 速率限制配置
@@ -160,6 +160,12 @@ function checkGeoRestriction(request) {
 	// 从 Cloudflare 请求头获取国家代码
 	// CF-IPCountry 头部由 Cloudflare 自动添加
 	const country = request.headers.get('CF-IPCountry') || 'UNKNOWN';
+	
+	// 对于非 Cloudflare 部署（如 Node.js 服务器），CF-IPCountry 不存在
+	// 此时 country 为 'UNKNOWN'，应该允许访问，否则会误杀所有用户
+	if (country === 'UNKNOWN') {
+		return { allowed: true, country, reason: 'Unknown country (non-Cloudflare deployment or missing header), allowing access' };
+	}
 	
 	const mode = CONFIG.security.geo_restriction.mode;
 	const allowedCountries = CONFIG.security.geo_restriction.allowed_countries;
@@ -1807,6 +1813,8 @@ async function handleRequest(request, env, ctx) {
 	// 从环境变量读取地理位置限制配置
 	if (env.GEO_RESTRICTION_ENABLED === 'true') {
 		CONFIG.security.geo_restriction.enabled = true;
+	} else if (env.GEO_RESTRICTION_ENABLED === 'false') {
+		CONFIG.security.geo_restriction.enabled = false;
 	}
 	if (env.GEO_RESTRICTION_MODE) {
 		CONFIG.security.geo_restriction.mode = env.GEO_RESTRICTION_MODE;

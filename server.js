@@ -54,7 +54,15 @@ async function startServer() {
       const env = {
         URL302: process.env.URL302 || '',
         URL: process.env.URL || '',
-        UA: process.env.UA || ''
+        UA: process.env.UA || '',
+        // 地理位置限制配置
+        GEO_RESTRICTION_ENABLED: process.env.GEO_RESTRICTION_ENABLED || 'false',
+        GEO_RESTRICTION_MODE: process.env.GEO_RESTRICTION_MODE || 'whitelist',
+        ALLOWED_COUNTRIES: process.env.ALLOWED_COUNTRIES || '',
+        BLOCKED_COUNTRIES: process.env.BLOCKED_COUNTRIES || '',
+        // 速率限制配置
+        RATE_LIMIT_ENABLED: process.env.RATE_LIMIT_ENABLED || 'false',
+        RATE_LIMIT_PER_MINUTE: process.env.RATE_LIMIT_PER_MINUTE || '60'
       };
       
       const response = await worker.fetch(request, env, {});

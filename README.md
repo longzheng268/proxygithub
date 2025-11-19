@@ -224,12 +224,12 @@ wrangler deployments list
 
 ### 🚨 重要：IP 地理位置限制配置
 
-**⚠️ 默认配置：本服务默认已启用地理位置限制，仅允许中国大陆（CN）、美国（US）和新加坡（SG）访问，其他地区将显示拒绝访问页面。**
+**⚠️ 默认配置：本服务默认已启用地理位置限制，仅允许中国大陆（CN）访问，其他地区将显示拒绝访问页面。**
 
 #### 当前默认配置
 - ✅ 地理位置限制：**已启用**
 - ✅ 限制模式：**白名单（whitelist）**
-- ✅ 允许访问的地区：**中国大陆（CN）、美国（US）、新加坡（SG）**
+- ✅ 允许访问的地区：**中国大陆（CN）**
 - 🚫 其他地区将看到：访问被拒绝页面
 
 #### 如何修改允许访问的地区
@@ -348,12 +348,12 @@ docker pull k8s.你的域名/pause:3.9
 | `UA` | 屏蔽的 User-Agent（逗号分隔） | `netcraft` | `bot,spider,crawler` |
 | `GEO_RESTRICTION_ENABLED` | 启用 IP 地理位置限制 | `true` ⚠️ 默认启用 | `true` 或 `false` |
 | `GEO_RESTRICTION_MODE` | 地理限制模式 | `whitelist` | `whitelist` 或 `blacklist` |
-| `ALLOWED_COUNTRIES` | 白名单模式允许的国家代码 | `CN,US,SG` ⚠️ | `CN,US,SG,JP,HK,TW` |
+| `ALLOWED_COUNTRIES` | 白名单模式允许的国家代码 | `CN` ⚠️ | `CN,US,SG,JP,HK,TW` |
 | `BLOCKED_COUNTRIES` | 黑名单模式阻止的国家代码 | 无 | `US,GB` |
 | `RATE_LIMIT_ENABLED` | 启用速率限制 | `false` | `true` 或 `false` |
 | `RATE_LIMIT_PER_MINUTE` | 每分钟请求数限制 | `60` | `60` |
 
-**⚠️ 注意：** 地理位置限制默认已启用，仅允许中国大陆（CN）、美国（US）和新加坡（SG）访问。
+**⚠️ 注意：** 地理位置限制默认已启用，仅允许中国大陆（CN）访问。
 
 **设置环境变量：**
 
@@ -795,7 +795,7 @@ docker pull ghcr.your-domain/owner/image:tag
 | `UA` | Blocked User-Agents (comma-separated) | `netcraft` | `bot,spider,crawler` |
 | `GEO_RESTRICTION_ENABLED` | Enable IP geolocation restrictions | `true` ⚠️ Enabled by default | `true` or `false` |
 | `GEO_RESTRICTION_MODE` | Restriction mode | `whitelist` | `whitelist` or `blacklist` |
-| `ALLOWED_COUNTRIES` | Allowed countries in whitelist mode | `CN,US,SG` ⚠️ | `CN,US,SG,JP,HK,TW` |
+| `ALLOWED_COUNTRIES` | Allowed countries in whitelist mode | `CN` ⚠️ | `CN,US,SG,JP,HK,TW` |
 | `BLOCKED_COUNTRIES` | Blocked countries in blacklist mode | None | `US,GB` |
 | `RATE_LIMIT_ENABLED` | Enable rate limiting | `false` | `true` or `false` |
 | `RATE_LIMIT_PER_MINUTE` | Requests per minute limit | `60` | `60` |

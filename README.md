@@ -300,6 +300,12 @@ docker pull k8s.你的域名/pause:3.9
 | `URL302` | 首页 302 重定向地址 | `https://github.com/longzheng268/proxygithub` |
 | `URL` | 自定义首页地址，或填写 `nginx` 显示伪装页 | `nginx` 或 `https://example.com` |
 | `UA` | 屏蔽的 User-Agent（逗号分隔） | `bot,spider,crawler` |
+| `GEO_RESTRICTION_ENABLED` | 启用 IP 地理位置限制 | `true` 或 `false` |
+| `GEO_RESTRICTION_MODE` | 地理限制模式 | `whitelist` 或 `blacklist` |
+| `ALLOWED_COUNTRIES` | 白名单模式允许的国家代码 | `CN,HK,TW` |
+| `BLOCKED_COUNTRIES` | 黑名单模式阻止的国家代码 | `US,GB` |
+| `RATE_LIMIT_ENABLED` | 启用速率限制 | `true` 或 `false` |
+| `RATE_LIMIT_PER_MINUTE` | 每分钟请求数限制 | `60` |
 
 **设置环境变量：**
 
@@ -310,12 +316,28 @@ wrangler secret put URL302
 
 wrangler secret put UA
 # 输入值后按回车
+
+# 启用 IP 地理位置限制（仅允许中国大陆访问）
+wrangler secret put GEO_RESTRICTION_ENABLED
+# 输入: true
+wrangler secret put GEO_RESTRICTION_MODE
+# 输入: whitelist
+wrangler secret put ALLOWED_COUNTRIES
+# 输入: CN
+
+# 启用速率限制
+wrangler secret put RATE_LIMIT_ENABLED
+# 输入: true
+wrangler secret put RATE_LIMIT_PER_MINUTE
+# 输入: 60
 ```
 
 或在 Cloudflare Dashboard:
 1. 进入你的 Worker
 2. 点击 `Settings` -> `Variables`
 3. 添加环境变量
+
+📖 **详细安全配置指南**: 请参考 [SECURITY.md](SECURITY.md) 了解 IP 地理位置限制和速率限制的完整配置说明。
 
 #### 自定义域名
 
@@ -440,6 +462,44 @@ wrangler deploy
 3. **请求限制**
    - Cloudflare Workers 免费版：100,000 请求/天
    - 建议升级付费版以获得更高配额
+
+### 🛡️ 安全功能
+
+本项目新增了多项安全功能，帮助防止滥用和保护服务：
+
+#### IP 地理位置限制
+
+通过配置环境变量，可以限制只允许特定国家/地区访问服务：
+
+```bash
+# 启用地理位置限制，仅允许中国大陆访问
+GEO_RESTRICTION_ENABLED=true
+GEO_RESTRICTION_MODE=whitelist
+ALLOWED_COUNTRIES=CN
+```
+
+**使用场景：**
+- 防止国外公司扫描导致的滥用投诉
+- 将服务限制在国内使用
+- 减少带宽消耗和请求配额
+
+#### 速率限制
+
+防止单个 IP 在短时间内发起过多请求：
+
+```bash
+# 启用速率限制，每分钟最多 60 个请求
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_PER_MINUTE=60
+```
+
+**优势：**
+- 防止 DDoS 攻击
+- 避免触发上游 API 的速率限制（HAP429 错误）
+- 确保服务对所有用户的公平访问
+- 降低 Cloudflare Workers 使用成本
+
+📖 **完整配置指南**: 请查看 [SECURITY.md](SECURITY.md) 了解详细配置说明和最佳实践。
 
 ### 🛡️ 安全说明
 
@@ -661,13 +721,73 @@ docker pull ghcr.your-domain/owner/image:tag
 | `URL302` | Home page 302 redirect | `https://github.com/longzheng268/proxygithub` |
 | `URL` | Custom home page or `nginx` for fake page | `nginx` |
 | `UA` | Blocked User-Agents (comma-separated) | `bot,spider,crawler` |
+| `GEO_RESTRICTION_ENABLED` | Enable IP geolocation restrictions | `true` or `false` |
+| `GEO_RESTRICTION_MODE` | Restriction mode | `whitelist` or `blacklist` |
+| `ALLOWED_COUNTRIES` | Allowed countries in whitelist mode | `CN,HK,TW` |
+| `BLOCKED_COUNTRIES` | Blocked countries in blacklist mode | `US,GB` |
+| `RATE_LIMIT_ENABLED` | Enable rate limiting | `true` or `false` |
+| `RATE_LIMIT_PER_MINUTE` | Requests per minute limit | `60` |
 
 **Set environment variables:**
 
 ```bash
 wrangler secret put URL302
 wrangler secret put UA
+
+# Enable IP geolocation restriction (China only)
+wrangler secret put GEO_RESTRICTION_ENABLED
+# Input: true
+wrangler secret put GEO_RESTRICTION_MODE
+# Input: whitelist
+wrangler secret put ALLOWED_COUNTRIES
+# Input: CN
+
+# Enable rate limiting
+wrangler secret put RATE_LIMIT_ENABLED
+# Input: true
+wrangler secret put RATE_LIMIT_PER_MINUTE
+# Input: 60
 ```
+
+📖 **Security Configuration Guide**: See [SECURITY.md](SECURITY.md) for detailed configuration instructions on IP geolocation restrictions and rate limiting.
+
+### 🛡️ Security Features
+
+This project includes security features to help prevent abuse and protect the service:
+
+#### IP Geolocation Restrictions
+
+Restrict access to specific countries/regions by configuring environment variables:
+
+```bash
+# Enable geolocation restriction, allow China only
+GEO_RESTRICTION_ENABLED=true
+GEO_RESTRICTION_MODE=whitelist
+ALLOWED_COUNTRIES=CN
+```
+
+**Use Cases:**
+- Prevent abuse complaints from overseas scanning
+- Limit service to domestic use
+- Reduce bandwidth consumption and request quota
+
+#### Rate Limiting
+
+Prevent a single IP from making too many requests in a short time:
+
+```bash
+# Enable rate limiting, max 60 requests per minute
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_PER_MINUTE=60
+```
+
+**Benefits:**
+- Prevent DDoS attacks
+- Avoid upstream API rate limits (HAP429 errors)
+- Ensure fair access for all users
+- Reduce Cloudflare Workers costs
+
+📖 **Complete Guide**: See [SECURITY.md](SECURITY.md) for detailed configuration and best practices.
 
 ### 🔧 Troubleshooting
 

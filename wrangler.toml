@@ -15,6 +15,20 @@ workers_dev = true
 # URL = ""     # 自定义首页地址或 "nginx" 显示 nginx 伪装页（可选）
 # UA = ""      # 需要屏蔽的 User-Agent，逗号分隔（可选）
 
+# ============================================
+# IP 地理位置限制配置 (新增)
+# ============================================
+# GEO_RESTRICTION_ENABLED = "true"           # 启用 IP 地理位置限制（默认: false）
+# GEO_RESTRICTION_MODE = "whitelist"         # 模式: "whitelist" 或 "blacklist"（默认: whitelist）
+# ALLOWED_COUNTRIES = "CN"                   # 白名单模式：允许的国家代码，逗号分隔（ISO 3166-1 alpha-2）
+# BLOCKED_COUNTRIES = "US,GB"                # 黑名单模式：阻止的国家代码，逗号分隔
+
+# ============================================
+# 速率限制配置 (新增)
+# ============================================
+# RATE_LIMIT_ENABLED = "true"                # 启用速率限制（默认: false）
+# RATE_LIMIT_PER_MINUTE = "60"               # 每分钟允许的请求数（默认: 60）
+
 # 路由配置示例（部署时取消注释并修改）
 # [[routes]]
 # pattern = "your-domain.com/*"

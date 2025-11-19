@@ -1870,6 +1870,8 @@ async function handleDockerProxy(request, env, url, pathname, userAgent, getReqH
 	const hostTop = hostname.split('.')[0]; // 获取主机名的第一部分
 
 	let checkHost; // 在这里定义 checkHost 变量
+	let fakePage = false; // 初始化 fakePage
+	
 	// 如果存在 ns 参数，优先使用它来确定 hub_host
 	if (ns) {
 		if (ns === 'docker.io') {
@@ -1877,14 +1879,18 @@ async function handleDockerProxy(request, env, url, pathname, userAgent, getReqH
 		} else {
 			hub_host = ns; // 直接使用 ns 作为 hub_host
 		}
+		checkHost = [hub_host, false]; // 设置 checkHost 避免后续访问 null
 	} else {
 		checkHost = routeByHosts(hostTop);
 		hub_host = checkHost[0]; // 获取上游地址
+		fakePage = checkHost[1]; // 获取伪装页标志
 	}
 
-	const fakePage = checkHost ? checkHost[1] : false; // 确保 fakePage 不为 undefined
 	console.log(`域名头部: ${hostTop}\n反代地址: ${hub_host}\n伪装首页: ${fakePage}`);
-	const isUuid = isUUID(pathname.split('/')[1].split('/')[0]);
+	
+	// 安全地解析 pathname 避免数组越界
+	const pathParts = pathname.split('/').filter(part => part.length > 0);
+	const isUuid = pathParts.length > 0 ? isUUID(pathParts[0]) : false;
 
 	if (屏蔽爬虫UA.some(fxxk => userAgent.includes(fxxk)) && 屏蔽爬虫UA.length > 0) {
 		// 首页改成一个nginx伪装页

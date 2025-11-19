@@ -24,6 +24,7 @@
 
 - 🌍 **全球加速** - 利用 Cloudflare 的全球 CDN 网络，提供极速访问
 - 🔒 **安全可靠** - 所有请求通过 HTTPS 加密传输
+- 🛡️ **防滥用保护** - 支持 IP 地理位置限制，防止国外扫描和滥用投诉
 - 💰 **完全免费** - 基于 Cloudflare Workers 免费计划
 - 🎯 **模块化设计** - 即使某个功能出错，其他功能仍可正常使用
 - ⚡ **零配置使用** - 部署后即可直接使用，无需复杂配置
@@ -220,6 +221,40 @@ wrangler deployments list
 4. **保存并部署**
    - 点击 `Save and Deploy`
    - 复制分配的 Worker 地址
+
+### 🚨 重要：防止滥用配置（推荐）
+
+**如果您担心被国外公司扫描或收到滥用投诉，强烈建议启用 IP 地理位置限制：**
+
+#### 快速配置（仅允许中国大陆访问）
+
+使用 Wrangler CLI:
+```bash
+# 1. 启用地理位置限制
+wrangler secret put GEO_RESTRICTION_ENABLED
+# 输入: true
+
+# 2. 设置为白名单模式
+wrangler secret put GEO_RESTRICTION_MODE
+# 输入: whitelist
+
+# 3. 只允许中国大陆访问
+wrangler secret put ALLOWED_COUNTRIES
+# 输入: CN
+
+# 4. 重新部署
+wrangler deploy
+```
+
+或在 Cloudflare Dashboard 中配置：
+1. 进入你的 Worker 设置
+2. 点击 `Settings` -> `Variables`
+3. 添加以下环境变量：
+   - `GEO_RESTRICTION_ENABLED` = `true`
+   - `GEO_RESTRICTION_MODE` = `whitelist`
+   - `ALLOWED_COUNTRIES` = `CN`
+
+**更多高级配置和其他国家设置，请参考 [SECURITY.md](SECURITY.md)**
 
 ### 📖 使用指南
 
@@ -556,6 +591,7 @@ git push origin feature/your-feature
 
 - 🌍 **Global Acceleration** - Powered by Cloudflare's global CDN network
 - 🔒 **Secure & Reliable** - All requests encrypted via HTTPS
+- 🛡️ **Abuse Prevention** - IP geolocation restrictions to prevent overseas scanning and abuse complaints
 - 💰 **Completely Free** - Based on Cloudflare Workers free plan
 - 🎯 **Modular Design** - Other functions work even if one fails
 - ⚡ **Zero Configuration** - Ready to use after deployment

@@ -222,37 +222,48 @@ wrangler deployments list
    - 点击 `Save and Deploy`
    - 复制分配的 Worker 地址
 
-### 🚨 重要：防止滥用配置（推荐）
+### 🚨 重要：IP 地理位置限制配置
 
-**如果您担心被国外公司扫描或收到滥用投诉，强烈建议启用 IP 地理位置限制：**
+**⚠️ 默认配置：本服务默认已启用地理位置限制，仅允许中国大陆（CN）、美国（US）和新加坡（SG）访问，其他地区将显示拒绝访问页面。**
 
-#### 快速配置（仅允许中国大陆访问）
+#### 当前默认配置
+- ✅ 地理位置限制：**已启用**
+- ✅ 限制模式：**白名单（whitelist）**
+- ✅ 允许访问的地区：**中国大陆（CN）、美国（US）、新加坡（SG）**
+- 🚫 其他地区将看到：访问被拒绝页面
+
+#### 如何修改允许访问的地区
 
 使用 Wrangler CLI:
 ```bash
-# 1. 启用地理位置限制
-wrangler secret put GEO_RESTRICTION_ENABLED
-# 输入: true
-
-# 2. 设置为白名单模式
-wrangler secret put GEO_RESTRICTION_MODE
-# 输入: whitelist
-
-# 3. 只允许中国大陆访问
+# 1. 修改允许的国家列表（例如：添加日本和香港）
 wrangler secret put ALLOWED_COUNTRIES
-# 输入: CN
+# 输入: CN,US,JP,HK,TW
 
-# 4. 重新部署
+# 2. 重新部署
 wrangler deploy
 ```
 
 或在 Cloudflare Dashboard 中配置：
 1. 进入你的 Worker 设置
 2. 点击 `Settings` -> `Variables`
-3. 添加以下环境变量：
-   - `GEO_RESTRICTION_ENABLED` = `true`
-   - `GEO_RESTRICTION_MODE` = `whitelist`
-   - `ALLOWED_COUNTRIES` = `CN`
+3. 添加或修改环境变量：
+   - `ALLOWED_COUNTRIES` = `CN,US,JP,HK,TW`（根据需要修改）
+
+#### 如何禁用地理位置限制（允许所有地区访问）
+
+```bash
+# 禁用地理位置限制
+wrangler secret put GEO_RESTRICTION_ENABLED
+# 输入: false
+
+# 重新部署
+wrangler deploy
+```
+
+#### Node.js 服务器部署说明
+
+如果您使用 Node.js 服务器部署（非 Cloudflare Workers），由于无法获取 `CF-IPCountry` 头部，系统会自动允许访问（country 为 'UNKNOWN'）。这样可以确保您在自己的服务器上测试时不会被误拦截。
 
 **更多高级配置和其他国家设置，请参考 [SECURITY.md](SECURITY.md)**
 
@@ -330,17 +341,19 @@ docker pull k8s.你的域名/pause:3.9
 
 在 Cloudflare Workers 设置中添加环境变量：
 
-| 变量名 | 说明 | 示例 |
-|--------|------|------|
-| `URL302` | 首页 302 重定向地址 | `https://github.com/longzheng268/proxygithub` |
-| `URL` | 自定义首页地址，或填写 `nginx` 显示伪装页 | `nginx` 或 `https://example.com` |
-| `UA` | 屏蔽的 User-Agent（逗号分隔） | `bot,spider,crawler` |
-| `GEO_RESTRICTION_ENABLED` | 启用 IP 地理位置限制 | `true` 或 `false` |
-| `GEO_RESTRICTION_MODE` | 地理限制模式 | `whitelist` 或 `blacklist` |
-| `ALLOWED_COUNTRIES` | 白名单模式允许的国家代码 | `CN,HK,TW` |
-| `BLOCKED_COUNTRIES` | 黑名单模式阻止的国家代码 | `US,GB` |
-| `RATE_LIMIT_ENABLED` | 启用速率限制 | `true` 或 `false` |
-| `RATE_LIMIT_PER_MINUTE` | 每分钟请求数限制 | `60` |
+| 变量名 | 说明 | 默认值 | 示例 |
+|--------|------|--------|------|
+| `URL302` | 首页 302 重定向地址 | 无 | `https://github.com/longzheng268/proxygithub` |
+| `URL` | 自定义首页地址，或填写 `nginx` 显示伪装页 | 无 | `nginx` 或 `https://example.com` |
+| `UA` | 屏蔽的 User-Agent（逗号分隔） | `netcraft` | `bot,spider,crawler` |
+| `GEO_RESTRICTION_ENABLED` | 启用 IP 地理位置限制 | `true` ⚠️ 默认启用 | `true` 或 `false` |
+| `GEO_RESTRICTION_MODE` | 地理限制模式 | `whitelist` | `whitelist` 或 `blacklist` |
+| `ALLOWED_COUNTRIES` | 白名单模式允许的国家代码 | `CN,US,SG` ⚠️ | `CN,US,SG,JP,HK,TW` |
+| `BLOCKED_COUNTRIES` | 黑名单模式阻止的国家代码 | 无 | `US,GB` |
+| `RATE_LIMIT_ENABLED` | 启用速率限制 | `false` | `true` 或 `false` |
+| `RATE_LIMIT_PER_MINUTE` | 每分钟请求数限制 | `60` | `60` |
+
+**⚠️ 注意：** 地理位置限制默认已启用，仅允许中国大陆（CN）、美国（US）和新加坡（SG）访问。
 
 **设置环境变量：**
 
@@ -352,13 +365,13 @@ wrangler secret put URL302
 wrangler secret put UA
 # 输入值后按回车
 
-# 启用 IP 地理位置限制（仅允许中国大陆访问）
-wrangler secret put GEO_RESTRICTION_ENABLED
-# 输入: true
-wrangler secret put GEO_RESTRICTION_MODE
-# 输入: whitelist
+# 修改允许访问的国家（例如：添加日本和香港）
 wrangler secret put ALLOWED_COUNTRIES
-# 输入: CN
+# 输入: CN,US,JP,HK,TW
+
+# 或者禁用地理位置限制（允许全球访问）
+wrangler secret put GEO_RESTRICTION_ENABLED
+# 输入: false
 
 # 启用速率限制
 wrangler secret put RATE_LIMIT_ENABLED
@@ -500,23 +513,46 @@ wrangler deploy
 
 ### 🛡️ 安全功能
 
-本项目新增了多项安全功能，帮助防止滥用和保护服务：
+本项目已启用多项安全功能，帮助防止滥用和保护服务：
 
-#### IP 地理位置限制
+#### IP 地理位置限制（默认已启用）
 
-通过配置环境变量，可以限制只允许特定国家/地区访问服务：
+**⚠️ 默认配置：已启用白名单模式，仅允许中国大陆（CN）和美国（US）访问**
+
+其他国家/地区访问时将看到：
+
+```
+🚫 Access Denied - 访问被拒绝
+
+抱歉，此服务目前仅对特定地区开放。
+Sorry, this service is currently only available in specific regions.
+
+检测到的地区 / Detected region: JP
+```
+
+**修改允许访问的地区：**
 
 ```bash
-# 启用地理位置限制，仅允许中国大陆访问
+# 例如：允许中国、美国、新加坡、日本、香港、台湾访问
 GEO_RESTRICTION_ENABLED=true
 GEO_RESTRICTION_MODE=whitelist
-ALLOWED_COUNTRIES=CN
+ALLOWED_COUNTRIES=CN,US,SG,JP,HK,TW
+```
+
+**禁用地理位置限制（允许全球访问）：**
+
+```bash
+GEO_RESTRICTION_ENABLED=false
 ```
 
 **使用场景：**
-- 防止国外公司扫描导致的滥用投诉
-- 将服务限制在国内使用
-- 减少带宽消耗和请求配额
+- ✅ 防止国外公司扫描导致的滥用投诉
+- ✅ 将服务限制在特定国家/地区使用
+- ✅ 减少带宽消耗和请求配额
+- ✅ 默认配置适合中国大陆和美国用户
+
+**Node.js 部署说明：**
+Node.js 服务器部署时，由于缺少 Cloudflare 的地理位置检测功能，当无法识别地区时（UNKNOWN），系统会自动允许访问，以便您在本地或自建服务器上测试使用。
 
 #### 速率限制
 
@@ -752,17 +788,19 @@ docker pull ghcr.your-domain/owner/image:tag
 
 #### Environment Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `URL302` | Home page 302 redirect | `https://github.com/longzheng268/proxygithub` |
-| `URL` | Custom home page or `nginx` for fake page | `nginx` |
-| `UA` | Blocked User-Agents (comma-separated) | `bot,spider,crawler` |
-| `GEO_RESTRICTION_ENABLED` | Enable IP geolocation restrictions | `true` or `false` |
-| `GEO_RESTRICTION_MODE` | Restriction mode | `whitelist` or `blacklist` |
-| `ALLOWED_COUNTRIES` | Allowed countries in whitelist mode | `CN,HK,TW` |
-| `BLOCKED_COUNTRIES` | Blocked countries in blacklist mode | `US,GB` |
-| `RATE_LIMIT_ENABLED` | Enable rate limiting | `true` or `false` |
-| `RATE_LIMIT_PER_MINUTE` | Requests per minute limit | `60` |
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `URL302` | Home page 302 redirect | None | `https://github.com/longzheng268/proxygithub` |
+| `URL` | Custom home page or `nginx` for fake page | None | `nginx` |
+| `UA` | Blocked User-Agents (comma-separated) | `netcraft` | `bot,spider,crawler` |
+| `GEO_RESTRICTION_ENABLED` | Enable IP geolocation restrictions | `true` ⚠️ Enabled by default | `true` or `false` |
+| `GEO_RESTRICTION_MODE` | Restriction mode | `whitelist` | `whitelist` or `blacklist` |
+| `ALLOWED_COUNTRIES` | Allowed countries in whitelist mode | `CN,US,SG` ⚠️ | `CN,US,SG,JP,HK,TW` |
+| `BLOCKED_COUNTRIES` | Blocked countries in blacklist mode | None | `US,GB` |
+| `RATE_LIMIT_ENABLED` | Enable rate limiting | `false` | `true` or `false` |
+| `RATE_LIMIT_PER_MINUTE` | Requests per minute limit | `60` | `60` |
+
+**⚠️ Note:** Geolocation restriction is enabled by default, allowing only China (CN), United States (US), and Singapore (SG) access.
 
 **Set environment variables:**
 
@@ -770,13 +808,13 @@ docker pull ghcr.your-domain/owner/image:tag
 wrangler secret put URL302
 wrangler secret put UA
 
-# Enable IP geolocation restriction (China only)
-wrangler secret put GEO_RESTRICTION_ENABLED
-# Input: true
-wrangler secret put GEO_RESTRICTION_MODE
-# Input: whitelist
+# Modify allowed countries (e.g., add Japan and Hong Kong)
 wrangler secret put ALLOWED_COUNTRIES
-# Input: CN
+# Input: CN,US,JP,HK,TW
+
+# Or disable geolocation restriction (allow global access)
+wrangler secret put GEO_RESTRICTION_ENABLED
+# Input: false
 
 # Enable rate limiting
 wrangler secret put RATE_LIMIT_ENABLED
@@ -789,23 +827,46 @@ wrangler secret put RATE_LIMIT_PER_MINUTE
 
 ### 🛡️ Security Features
 
-This project includes security features to help prevent abuse and protect the service:
+This project has security features enabled by default to help prevent abuse and protect the service:
 
-#### IP Geolocation Restrictions
+#### IP Geolocation Restrictions (Enabled by Default)
 
-Restrict access to specific countries/regions by configuring environment variables:
+**⚠️ Default Configuration: Whitelist mode enabled, allowing only China (CN), United States (US), and Singapore (SG) access**
+
+Other countries/regions will see:
+
+```
+🚫 Access Denied - 访问被拒绝
+
+抱歉，此服务目前仅对特定地区开放。
+Sorry, this service is currently only available in specific regions.
+
+检测到的地区 / Detected region: JP
+```
+
+**Modify allowed countries:**
 
 ```bash
-# Enable geolocation restriction, allow China only
+# Example: Allow China, US, Japan, Hong Kong, Taiwan
 GEO_RESTRICTION_ENABLED=true
 GEO_RESTRICTION_MODE=whitelist
-ALLOWED_COUNTRIES=CN
+ALLOWED_COUNTRIES=CN,US,JP,HK,TW
+```
+
+**Disable geolocation restriction (allow global access):**
+
+```bash
+GEO_RESTRICTION_ENABLED=false
 ```
 
 **Use Cases:**
-- Prevent abuse complaints from overseas scanning
-- Limit service to domestic use
-- Reduce bandwidth consumption and request quota
+- ✅ Prevent abuse complaints from overseas scanning
+- ✅ Limit service to specific countries/regions
+- ✅ Reduce bandwidth consumption and request quota
+- ✅ Default configuration suitable for China and US users
+
+**Node.js Deployment Note:**
+For Node.js server deployments, when the geolocation cannot be detected (country is UNKNOWN due to missing Cloudflare headers), the system will automatically allow access for local testing and self-hosted servers.
 
 #### Rate Limiting
 

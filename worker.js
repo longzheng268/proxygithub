@@ -16,11 +16,11 @@ const CONFIG = {
 	security: {
 		blocked_user_agents: ['netcraft'],
 		// IP 地理位置限制配置
-		// 默认允许中国大陆访问，阻止其他国家/地区
+		// 默认允许中国大陆、美国和新加坡访问，阻止其他国家/地区
 		geo_restriction: {
-			enabled: false, // 默认关闭，通过环境变量启用
+			enabled: true, // 默认开启地理限制
 			mode: 'whitelist', // 'whitelist' 或 'blacklist'
-			allowed_countries: ['CN'], // ISO 3166-1 alpha-2 国家代码白名单
+			allowed_countries: ['CN', 'US', 'SG'], // ISO 3166-1 alpha-2 国家代码白名单
 			blocked_countries: [], // 黑名单模式使用
 		},
 		// 速率限制配置
@@ -1813,6 +1813,8 @@ async function handleRequest(request, env, ctx) {
 	// 从环境变量读取地理位置限制配置
 	if (env.GEO_RESTRICTION_ENABLED === 'true') {
 		CONFIG.security.geo_restriction.enabled = true;
+	} else if (env.GEO_RESTRICTION_ENABLED === 'false') {
+		CONFIG.security.geo_restriction.enabled = false;
 	}
 	if (env.GEO_RESTRICTION_MODE) {
 		CONFIG.security.geo_restriction.mode = env.GEO_RESTRICTION_MODE;

@@ -265,6 +265,8 @@ wrangler deploy
 
 如果您使用 Node.js 服务器部署（非 Cloudflare Workers），由于无法获取 `CF-IPCountry` 头部，系统会自动允许访问（country 为 'UNKNOWN'）。这样可以确保您在自己的服务器上测试时不会被误拦截。
 
+**重要说明：** 为了保持配置一致性，Node.js 服务器部署时默认也启用地理位置限制（与 Cloudflare Workers 部署一致），但由于缺少地理位置检测功能，实际上所有请求都会被允许。如果您希望完全禁用地理位置限制，可以在环境变量中设置 `GEO_RESTRICTION_ENABLED=false`。
+
 **更多高级配置和其他国家设置，请参考 [SECURITY.md](SECURITY.md)**
 
 ### 📖 使用指南
@@ -866,7 +868,7 @@ GEO_RESTRICTION_ENABLED=false
 - ✅ Default configuration suitable for China and US users
 
 **Node.js Deployment Note:**
-For Node.js server deployments, when the geolocation cannot be detected (country is UNKNOWN due to missing Cloudflare headers), the system will automatically allow access for local testing and self-hosted servers.
+For Node.js server deployments, when the geolocation cannot be detected (country is UNKNOWN due to missing Cloudflare headers), the system will automatically allow access for local testing and self-hosted servers. For consistency with Cloudflare Workers deployments, geo-restriction is enabled by default in configuration, but all requests are allowed when country detection is unavailable. You can explicitly disable geo-restriction by setting `GEO_RESTRICTION_ENABLED=false` in environment variables.
 
 #### Rate Limiting
 

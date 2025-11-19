@@ -80,6 +80,17 @@ URL=nginx
 UA=bot,spider,crawler
 PORT=8787
 HOST=0.0.0.0
+
+# 地理位置限制配置（可选）
+# 注意：Node.js 部署时，由于缺少 CF-IPCountry 头部，即使启用限制也会自动允许所有访问
+# 建议在 Node.js 部署时保持禁用状态，在 Cloudflare Workers 部署时按需启用
+GEO_RESTRICTION_ENABLED=false
+GEO_RESTRICTION_MODE=whitelist
+ALLOWED_COUNTRIES=CN,US,SG
+
+# 速率限制配置（可选）
+RATE_LIMIT_ENABLED=false
+RATE_LIMIT_PER_MINUTE=60
 EOF
 ```
 

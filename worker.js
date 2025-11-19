@@ -161,6 +161,12 @@ function checkGeoRestriction(request) {
 	// CF-IPCountry 头部由 Cloudflare 自动添加
 	const country = request.headers.get('CF-IPCountry') || 'UNKNOWN';
 	
+	// 对于非 Cloudflare 部署（如 Node.js 服务器），CF-IPCountry 不存在
+	// 此时 country 为 'UNKNOWN'，应该允许访问，否则会误杀所有用户
+	if (country === 'UNKNOWN') {
+		return { allowed: true, country, reason: 'Unknown country (non-Cloudflare deployment or missing header), allowing access' };
+	}
+	
 	const mode = CONFIG.security.geo_restriction.mode;
 	const allowedCountries = CONFIG.security.geo_restriction.allowed_countries;
 	const blockedCountries = CONFIG.security.geo_restriction.blocked_countries;

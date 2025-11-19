@@ -20,7 +20,7 @@ workers_dev = true
 # ============================================
 # GEO_RESTRICTION_ENABLED = "true"           # 启用 IP 地理位置限制（默认: true）
 # GEO_RESTRICTION_MODE = "whitelist"         # 模式: "whitelist" 或 "blacklist"（默认: whitelist）
-# ALLOWED_COUNTRIES = "CN,US,SG"             # 白名单模式：允许的国家代码，逗号分隔（默认: CN,US,SG）
+# ALLOWED_COUNTRIES = "CN"                   # 白名单模式：允许的国家代码，逗号分隔（默认: CN）
 # BLOCKED_COUNTRIES = ""                     # 黑名单模式：阻止的国家代码，逗号分隔
 
 # ============================================

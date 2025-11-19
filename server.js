@@ -58,7 +58,7 @@ async function startServer() {
         // 地理位置限制配置
         GEO_RESTRICTION_ENABLED: process.env.GEO_RESTRICTION_ENABLED || 'true',
         GEO_RESTRICTION_MODE: process.env.GEO_RESTRICTION_MODE || 'whitelist',
-        ALLOWED_COUNTRIES: process.env.ALLOWED_COUNTRIES || 'CN,US,SG',
+        ALLOWED_COUNTRIES: process.env.ALLOWED_COUNTRIES || 'CN',
         BLOCKED_COUNTRIES: process.env.BLOCKED_COUNTRIES || '',
         // 速率限制配置
         RATE_LIMIT_ENABLED: process.env.RATE_LIMIT_ENABLED || 'false',
